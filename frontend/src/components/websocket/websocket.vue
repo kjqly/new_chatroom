@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 <div v-if=mark class="login_interface">
 	<div class="sender">
 		用户名<br/>
@@ -17,7 +17,7 @@
 
 <div v-else=mark class="background-wrapper">
 	<div class="title-wrapper">
-		聊天界面
+		聊天界面1234
 	</div>
 	
 	<div class="content-wrapper">
