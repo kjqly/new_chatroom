@@ -17,7 +17,7 @@
 
 <div v-else=mark class="background-wrapper">
 	<div class="title-wrapper">
-		聊天界面1234
+		聊天界面
 	</div>
 	
 	<div class="content-wrapper">
