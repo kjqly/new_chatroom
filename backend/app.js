@@ -102,23 +102,18 @@ wss.on('connection', function(ws) {
 		{
 			connect(message.data.user,ws);
 
-			console.log("test2");
-			
 			//按照用户名密码查询数据库，验证是否符合登陆条件
-			User.findbyuser(
+			User.verify(
 				message.data,
 				function(err,user)
 				{
 					if(err){
-						console.log("test3");
 						console.log(err);
 					}
 					else{
-						console.log("test4");
 						console.log(user);
 						//如果数据库中存在登录信息
 						if(user[0] != null){
-							console.log("test5");
 							var login_temp={message:"login_permit"};
 							var login_message = JSON.stringify(login_temp)
 							str.ws.send(login_message);
@@ -127,7 +122,6 @@ wss.on('connection', function(ws) {
 						else{
 							var login_temp={message:"login_denied"};
 							var login_message = JSON.stringify(login_temp)
-							console.log("test6");
 							str.ws.send(login_message);
 						}
 					}
@@ -148,13 +142,60 @@ wss.on('connection', function(ws) {
 			});
 		}*/
 		
-		//用户登陆验证
-	
+		//添加联系人
+		else if(message.action=="add_contact")
+		{
+			console.log(message);
+			User.findbyuser(
+				message.data,
+				function(err,user)
+				{
+					if(err){
+						console.log(err);
+					}
+					else{
+						console.log(user);
+						if(user[0]!=null)
+						{
+							var exist=false;
+							user[0].contact_id.forEach(function(contact_temp){
+								if(contact_temp==message.data.contact_id){
+									exist=true;
+									var add_contact_temp={message:"contact_exist"};
+									var add_contact = JSON.stringify(add_contact_temp);
+								
+									ws.send(add_contact);
+								}
+							});
 							
-							
+							if(exist==false)
+							{	
+								//添加联系人
+								User.addcontact(
+									message.data,
+									function(err,user)
+									{
+										if(err) {
+											console.log(err);
+										}
+										else {
+											
+											console.log(user);
+										}
+									});
+									
+								add_contact_temp={message:"add_contact_success",contact:message.data.contact};
+								add_contact = JSON.stringify(add_contact_temp);
+								
+								ws.send(add_contact);
+							}
+						}
+					}
+				});
+		}
 			
 		//建立群组部分
-		else if(message.action=="add")
+		else if(message.action=="add_member")
 		{
 			//查找群组是否存在
 			Groupchat.findbychat_name(

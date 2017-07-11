@@ -1,4 +1,6 @@
 ﻿<template>
+
+
 <div v-if=mark class="login_interface">
 	<div class="sender">
 		用户名<br/>
@@ -25,16 +27,20 @@
 			<div class="sender">
 				{{user}}
 			</div>		
-			<div class="target">
+			<div class="group_target">
 				输入群名<br/>
-				<input type="text" id="target_id">
+				<input type="text" id="group_target_id">
 			</div>
-			
+			<br/><br/>
+			<div class="single_target">
+				输入好友名<br/>
+				<input type="text" id="single_target_id">
+			</div>
+			<br/>
+
+			<br/>
 			<div class="group-chat-class">
-				<br/>
-				<br/>
-				<br/>
-				<br/>
+				
 				添加群<br/>
 				群聊ID<br/>
 				<input type="text" id="group_chat_id">
@@ -44,9 +50,26 @@
 				<input type="text" id="member_id">
 			</div> 
 			<br/>
-			<div class="button-add">
+			<div class="button-add1">
 				<button @click="addmember">添加</button>
 				
+			</div>
+			<br/>
+			<div class="add_contact">
+				添加好友<br/>
+				添加的联系人ID<br/>
+				<input type="text" id="contact_id">
+			</div> 
+			<br/>
+			<div class="button-add2">
+				<button @click="addcontact">添加</button>
+			</div>
+			<div class=contant_list>
+				<ul>
+					<li v-for="content in contactList">
+						{{content.contact}}		
+					</li>
+				</ul>
 			</div>
 		</div>
 		<div class="chat">
@@ -101,11 +124,9 @@ export default {
   				msg:"b"
   			}],
 			
-			friendList: [{
-  				friend: "好友1"
-  			},{
-  				friend: "好友2"
-  			}],
+			contactList:[{
+				contact:"张三123"
+			}],
 			sender: "",
 			target: "",
 			content: "",
@@ -166,10 +187,21 @@ export default {
 			var member_id_tmp = document.getElementById("member_id");
 			var member_id=member_id_tmp.value;
 			
-			var temp = {action:"add",data:{group_id:group_id,member_id:member_id}};
+			var temp = {action:"add_member",data:{group_id:group_id,member_id:member_id}};
+			temp = JSON.stringify(temp);
+			this.ws_server.send(temp);
+		},
+		
+		addcontact(){
+			var contact_id_tmp = document.getElementById("contact_id");
+			var contact_id=contact_id_tmp.value;
+			//console.log(this.content)
+
+			var temp = {action:"add_contact",data:{contact_id:contact_id,user:this.user}};
 			temp = JSON.stringify(temp);
 			this.ws_server.send(temp);
 		}
+			
 	},
 	created() {
 		this.ws_server = new WebSocket('ws://127.0.0.1:8081');
@@ -199,6 +231,16 @@ export default {
 				else if(msg.message=="need_join")
 				{
 					alert("you havn't join this group");
+				}
+				else if(msg.message=="add_contact_success")
+				{
+					alert("add contact success!");
+					
+				}
+				else if(msg.message=="contact_exist")
+				{
+					alert("you have already added this contact!")
+					self.contactList.push({contact:message.contact})
 				}
 				else{
 					console.log(msg);
