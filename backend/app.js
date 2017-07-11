@@ -96,10 +96,49 @@ wss.on('connection', function(ws) {
 		console.log("ws.on message");
 		console.log(message);
 		message = JSON.parse(message);
+		//当监听消息为注册消息时
+		if(message.action=="sign_up" && message.data.user!="" && message.data.password!="")
+		{
+			User.findbyuser(
+				message.data,
+				function(err,user)
+				{
+					if(err){
+						console.log(err);
+					}
+					else{
+						if(user[0]!=null)
+						{
+							var sign_up_temp={message:"sign_up_fail"};
+							var sign_up = JSON.stringify(sign_up_temp);
+							ws.send(sign_up);	
+						}
+						else	
+						{							
+							console.log(user);
+							User.add_user(
+								message.data,	
+								function(err,user)
+								{
+									if(err){
+										console.log(err);
+									}
+									else{					
+										var sign_up_temp={message:"sign_up_success"};
+										var sign_up = JSON.stringify(sign_up_temp);
+										ws.send(sign_up);
+									}
+								});
+						}
+					}
+				});
+		}
+
 		
 		//监听的消息为登录消息时
 		if(message.action=="login")
 		{
+			
 			connect(message.data.user,ws);
 
 			//按照用户名密码查询数据库，验证是否符合登陆条件
@@ -111,18 +150,17 @@ wss.on('connection', function(ws) {
 						console.log(err);
 					}
 					else{
-						console.log(user);
 						//如果数据库中存在登录信息
 						if(user[0] != null){
 							var login_temp={message:"login_permit"};
 							var login_message = JSON.stringify(login_temp)
-							str.ws.send(login_message);
+							ws.send(login_message);
 						}
 						//数据库中不存在登录信息
 						else{
 							var login_temp={message:"login_denied"};
 							var login_message = JSON.stringify(login_temp)
-							str.ws.send(login_message);
+							ws.send(login_message);
 						}
 					}
 				})
@@ -184,9 +222,8 @@ wss.on('connection', function(ws) {
 										}
 									});
 									
-								add_contact_temp={message:"add_contact_success",contact:message.data.contact};
+								add_contact_temp={message:"add_contact_success",contact:message.data.contact_id};
 								add_contact = JSON.stringify(add_contact_temp);
-								
 								ws.send(add_contact);
 							}
 						}
@@ -219,15 +256,29 @@ wss.on('connection', function(ws) {
 								}
 								else{
 									//向新建的群组中加入成员信息
+									console.log("b test");
 									console.log(groupchat);
-									Groupchat.add_member_id(message,function(err,result){
+									Groupchat.add_member_id(message,function(err,group){
 										if(err) {
 											console.log(err);
 										}
 										else {
-											console.log(result);
+											console.log(group);
+											//向用户信息中加入群的信息
+											User.add_group_id_to_user(
+												message.data,
+												function(err,user){
+													if(err) {
+														console.log(err);
+													}
+													else {
+														console.log(user);
+													}	
+												});													
+											
 										}
 									});
+									
 								}
 							});
 						}
@@ -240,8 +291,19 @@ wss.on('connection', function(ws) {
 								}
 								else {
 									console.log(result);
+									User.add_group_id_to_user(
+										message.data,
+										function(err,user){
+											if(err) {
+												console.log(err);
+											}
+											else {
+												console.log(user);
+											}	
+										});
 								}
 							});
+							
 						/*	Groupchat.update({chatroomname:message.data.group_id},
 							{$addToSet:{member_id:data.member_id}});
 							console.log("have");*/
@@ -342,7 +404,7 @@ wss.on('connection', function(ws) {
 						//使用ws_temp中的ws来获取连接，并进行发送消息
 						ws_temp.ws.send(send_content);
 					}
-				})
+				});
 			}
 		}
 	});

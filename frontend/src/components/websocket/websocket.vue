@@ -1,19 +1,36 @@
 ﻿<template>
 
-
 <div v-if=mark class="login_interface">
-	<div class="sender">
-		用户名<br/>
-		<input type="text" id="user">
-	</div>	
-	<br/>	
-	<div class="target">
-		密码<br/>
-		<input type="password" id="password">
+	<div class="sign_up">
+		<div>
+			用户名<br/>
+			<input type="text" id="sign_up_username">
+		</div>	
+		<br/>	
+		<div >
+			密码<br/>
+			<input type="password" id="sign_up_password">
+		</div>
+		<br/>
+		<div>
+			<button @click="signup">注册</button>
+		</div>
 	</div>
-	<br/>
+	
 	<div class="login">
-		<button @click="login">登陆</button>
+		<div>
+			用户名<br/>
+			<input type="text" id="user">
+		</div>	
+		<br/>	
+		<div>
+			密码<br/>
+			<input type="password" id="password">
+		</div>
+		<br/>
+		<div class="login">
+			<button @click="login">登陆</button>
+		</div>
 	</div>
 </div>
 
@@ -138,6 +155,22 @@ export default {
 		}
 	},
 	methods: {
+		signup(){
+			
+			let sign_up_user_temp = document.getElementById("sign_up_username");
+			var user=sign_up_user_temp.value;
+			
+			let sign_up_password_temp = document.getElementById("sign_up_password");
+			var password=sign_up_password_temp.value;
+			
+			this.send_content = {action:"sign_up",data:{user:user,password:password}};
+			this.send_content = JSON.stringify(this.send_content);
+
+			console.log(this.send_content);
+
+			this.ws_server.send(this.send_content);
+			
+		},
 		login(){
 			//console.log(this.mark);
 			let user_tmp = document.getElementById("user");
@@ -219,7 +252,14 @@ export default {
 			if(msg.replace(/(^s*)|(s*$)/g, "").length != 0){
 				
 				msg = JSON.parse(msg);
-				
+				if(msg.message=="sign_up_success")
+				{
+					alert("Sign up successful");
+				}
+				if(msg.message=="sign_up_fail")
+				{
+					alert("You've already registered");
+				}
 				if(msg.message=="login_permit")
 				{
 					self.mark=false;
@@ -235,12 +275,12 @@ export default {
 				else if(msg.message=="add_contact_success")
 				{
 					alert("add contact success!");
-					
+					self.contactList.push({contact:msg.contact});
 				}
 				else if(msg.message=="contact_exist")
 				{
 					alert("you have already added this contact!")
-					self.contactList.push({contact:message.contact})
+
 				}
 				else{
 					console.log(msg);
@@ -274,14 +314,15 @@ export default {
 </script>
 
 <style lang="stylus" rel="stylesheet/stylus">
+
 .login_interface
 	background-color:#3D7878
 	color:#FFFFFF
 	display:flex
-	justify-content:center	
+	justify-content:center
 	align-items:center
 	position: absolute
-	flex-direction:column
+	flex-direction:row
 	height:100%
 	width:100%
 	margin-left:-8px
