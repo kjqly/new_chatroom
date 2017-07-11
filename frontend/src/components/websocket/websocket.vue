@@ -125,7 +125,7 @@ export default {
   			}],
 			
 			contactList:[{
-				contact:"张三123"
+				contact:"张三"
 			}],
 			sender: "",
 			target: "",
