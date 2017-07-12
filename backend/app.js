@@ -99,6 +99,7 @@ wss.on('connection', function(ws) {
 		//当监听消息为注册消息时
 		if(message.action=="sign_up" && message.data.user!="" && message.data.password!="")
 		{
+			//查找用户是否已经注册过
 			User.findbyuser(
 				message.data,
 				function(err,user)
@@ -107,15 +108,18 @@ wss.on('connection', function(ws) {
 						console.log(err);
 					}
 					else{
+						//若用户注册过，即用户表里存在用户信息
 						if(user[0]!=null)
 						{
 							var sign_up_temp={message:"sign_up_fail"};
 							var sign_up = JSON.stringify(sign_up_temp);
 							ws.send(sign_up);	
 						}
+						//用户没有注册过
 						else	
 						{							
 							console.log(user);
+							//向用户表中加入用户信息
 							User.add_user(
 								message.data,	
 								function(err,user)
@@ -152,7 +156,11 @@ wss.on('connection', function(ws) {
 					else{
 						//如果数据库中存在登录信息
 						if(user[0] != null){
-							var login_temp={message:"login_permit"};
+							var login_temp={message:"login_permit",
+							data:{group_id:user[0].group_id,contact_id:user[0].contact_id}};
+							
+							console.log(login_temp);
+							
 							var login_message = JSON.stringify(login_temp)
 							ws.send(login_message);
 						}
@@ -234,79 +242,117 @@ wss.on('connection', function(ws) {
 		//建立群组部分
 		else if(message.action=="add_member")
 		{
-			//查找群组是否存在
-			Groupchat.findbychat_name(
-				message.data.group_id,
-				function(err,groupchat)
+			//查找加入群组的成员是否存在
+			User.findbymember_id(
+				message.data,
+				function(err,user)
 				{
 					if(err){
 						console.log(err);
 					}
+					//如果用户不存在
 					else{
-						console.log(groupchat);
-						
-						//若群组不存在，则新建群组
-						if(groupchat[0] == null){
-							Groupchat.create({
-								chatroomname:message.data.group_id,
-								//member_id:message.data.member_id
-							},function(err,groupchat){
-								if(err){
-									console.log(err);
-								}
-								else{
-									//向新建的群组中加入成员信息
-									console.log("b test");
-									console.log(groupchat);
-									Groupchat.add_member_id(message,function(err,group){
-										if(err) {
-											console.log(err);
-										}
-										else {
-											console.log(group);
-											//向用户信息中加入群的信息
-											User.add_group_id_to_user(
-												message.data,
-												function(err,user){
-													if(err) {
-														console.log(err);
-													}
-													else {
-														console.log(user);
-													}	
-												});													
-											
-										}
-									});
-									
-								}
-							});
-						}
-						
-						//若群组已经存在，直接添加成员信息
-						else{
-							Groupchat.add_member_id(message,function(err,result){
-								if(err) {
-									console.log(err);
-								}
-								else {
-									console.log(result);
-									User.add_group_id_to_user(
-										message.data,
-										function(err,user){
-											if(err) {
-												console.log(err);
-											}
-											else {
-												console.log(user);
-											}	
-										});
-								}
-							});
+						console.log("test add");
+						if(user[0]==null)
+						{
 							
-						/*	Groupchat.update({chatroomname:message.data.group_id},
-							{$addToSet:{member_id:data.member_id}});
-							console.log("have");*/
+							let result_temp={message:"member_add_notexist"};
+							let result = JSON.stringify(result_temp);
+							ws.send(result);
+						}
+						else
+						{
+							//查找群组是否存在
+							Groupchat.findbychat_name(
+								message.data.group_id,
+								function(err,groupchat)
+								{
+									if(err){
+										console.log(err);
+									}
+									else{
+										console.log(groupchat);
+										
+										//若群组不存在，则新建群组
+										if(groupchat[0] == null){
+											Groupchat.create({
+												chatroomname:message.data.group_id,
+												//member_id:message.data.member_id
+											},function(err,groupchat){
+												if(err){
+													console.log(err);
+												}
+												else{
+													let result_temp={message:"group_creat_success"};
+													let result = JSON.stringify(result_temp);
+													ws.send(result);
+													//向新建的群组中加入成员信息
+													console.log("b test");
+													console.log(groupchat);
+													Groupchat.add_member_id(message,function(err,group){
+														if(err) {
+															console.log(err);
+														}
+														else {
+															console.log(group);
+															//向用户信息中加入群的信息
+															User.add_group_id_to_user(
+																message.data,
+																function(err,user){
+																	if(err) {
+																		console.log(err);
+																	}
+																	else {
+																		console.log(user);
+																	}	
+																});													
+															
+														}
+													});
+													
+												}
+											});
+										}
+										
+										//若群组已经存在，直接添加成员信息
+										else{
+											Groupchat.add_member_id(message,function(err,result){
+												if(err) {
+													console.log(err);
+												}
+												else {
+													console.log(result);
+													User.add_group_id_to_user(
+														message.data,
+														function(err,user){
+															if(err) {
+																console.log(err);
+															}
+															else {
+																console.log(user);
+															}	
+														});
+													if(result.nModified==0)
+													{
+														let result_temp={message:"member_exist"};
+														let result = JSON.stringify(result_temp);
+														ws.send(result);
+													}
+													else
+													{
+														let result_temp={message:"member_add_success"};
+														let result = JSON.stringify(result_temp);
+														ws.send(result);
+													}
+												}
+											});
+											
+										/*	Groupchat.update({chatroomname:message.data.group_id},
+											{$addToSet:{member_id:data.member_id}});
+											console.log("have");*/
+										}
+									}
+								});
 						}
 					}
 				});
@@ -344,37 +390,40 @@ wss.on('connection', function(ws) {
 						}
 						else{
 							var exist=false;
+							if(groupchat[0]!=null)
+							{
 							//判断发消息的用户是否在群里
-							groupchat[0].member_id.forEach(function(user_temp){
-								if(message.data.user==user_temp)
-									exist=true
-							});
-							//不在群里则返回提示信息
-							if(exist==false)
-							{
-								var temp={message:"need_join"}
-								var join_temp=JSON.stringify(temp);
-								ws.send(join_temp);
-							}
+								groupchat[0].member_id.forEach(function(user_temp){
+									if(message.data.user==user_temp)
+										exist=true
+								});
+								//不在群里则返回提示信息
+								if(exist==false)
+								{
+									var temp={message:"need_join"}
+									var join_temp=JSON.stringify(temp);
+									ws.send(join_temp);
+								}
 								
-							if(groupchat[0]!=null && exist==true)
-							{
-								console.log(groupchat);
-								//遍历整个连接池，查询是否有符合条件的websocket连接
-								clients.forEach(function(ws_temp){
-									var send_content = JSON.stringify(message.data);
-									console.log(send_content);
-									
-									//遍历数据库中群组的成员信息
-									for(var i=0;i<groupchat[0].member_id.length;i++)
-									{
-										console.log(groupchat[0].member_id[i]);
-										if(groupchat[0].member_id[i] == ws_temp.user){
-											//使用ws_temp中的ws来获取连接，并进行发送消息
-											ws_temp.ws.send(send_content);
+								else
+								{
+									console.log(groupchat);
+									//遍历整个连接池，查询是否有符合条件的websocket连接
+									clients.forEach(function(ws_temp){
+										var send_content = JSON.stringify(message.data);
+										console.log(send_content);
+										
+										//遍历数据库中群组的成员信息
+										for(var i=0;i<groupchat[0].member_id.length;i++)
+										{
+											console.log(groupchat[0].member_id[i]);
+											if(groupchat[0].member_id[i] == ws_temp.user){
+												//使用ws_temp中的ws来获取连接，并进行发送消息
+												ws_temp.ws.send(send_content);
+											}
 										}
-									}
-								})
+									})
+								}
 							}
 						}
 					});

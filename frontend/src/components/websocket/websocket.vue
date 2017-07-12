@@ -1,37 +1,25 @@
 ﻿<template>
 
 <div v-if=mark class="login_interface">
-	<div class="sign_up">
-		<div>
-			用户名<br/>
-			<input type="text" id="sign_up_username">
-		</div>	
-		<br/>	
-		<div >
-			密码<br/>
-			<input type="password" id="sign_up_password">
-		</div>
-		<br/>
-		<div>
-			<button @click="signup">注册</button>
-		</div>
+	<div>
+		用户名<br/>
+		<input type="text" id="user">
+	</div>	
+	<br/>	
+	<div>
+		密码<br/>
+		<input type="password" id="password">
 	</div>
-	
-	<div class="login">
-		<div>
-			用户名<br/>
-			<input type="text" id="user">
-		</div>	
-		<br/>	
-		<div>
-			密码<br/>
-			<input type="password" id="password">
-		</div>
-		<br/>
+	<br/>
+	<div class="two_button">
 		<div class="login">
 			<button @click="login">登陆</button>
 		</div>
+		<div class="signup">
+			<button @click="signup">注册</button>
+		</div>
 	</div>
+
 </div>
 
 <div v-else=mark class="background-wrapper">
@@ -46,7 +34,7 @@
 			</div>		
 			<div class="group_target">
 				输入群名<br/>
-				<input type="text" id="group_target_id">
+				<input type="text" id="target_id">
 			</div>
 			<br/><br/>
 			<div class="single_target">
@@ -81,10 +69,17 @@
 			<div class="button-add2">
 				<button @click="addcontact">添加</button>
 			</div>
-			<div class=contant_list>
+			<div class=contact_list>
 				<ul>
 					<li v-for="content in contactList">
-						{{content.contact}}		
+						{{content}}		
+					</li>
+				</ul>
+			</div>
+			<div class=group_list>
+				<ul>
+					<li v-for="content in groupList">
+						{{content}}		
 					</li>
 				</ul>
 			</div>
@@ -141,9 +136,8 @@ export default {
   				msg:"b"
   			}],
 			
-			contactList:[{
-				contact:"张三"
-			}],
+			contactList:[],
+			groupList:[],
 			sender: "",
 			target: "",
 			content: "",
@@ -156,11 +150,10 @@ export default {
 	},
 	methods: {
 		signup(){
-			
-			let sign_up_user_temp = document.getElementById("sign_up_username");
+			let sign_up_user_temp = document.getElementById("user");
 			var user=sign_up_user_temp.value;
 			
-			let sign_up_password_temp = document.getElementById("sign_up_password");
+			let sign_up_password_temp = document.getElementById("password");
 			var password=sign_up_password_temp.value;
 			
 			this.send_content = {action:"sign_up",data:{user:user,password:password}};
@@ -256,13 +249,16 @@ export default {
 				{
 					alert("Sign up successful");
 				}
-				if(msg.message=="sign_up_fail")
+				else if(msg.message=="sign_up_fail")
 				{
 					alert("You've already registered");
 				}
-				if(msg.message=="login_permit")
+				else if(msg.message=="login_permit")
 				{
 					self.mark=false;
+	
+					self.contactList=[].concat(msg.data.contact_id);
+					self.groupList=[].concat(msg.data.group_id);
 				}
 				else if(msg.message=="login_denied")
 				{
@@ -281,6 +277,22 @@ export default {
 				{
 					alert("you have already added this contact!")
 
+				}
+				else if(msg.message=="member_exist")
+				{
+					alert("This member have already in this group");
+				}
+				else if(msg.message=="member_add_success")
+				{
+					alert("add member successful");
+				}
+				else if(msg.message=="member_add_notexist")
+				{
+					alert("member not exist");
+				}
+				else if(msg.message=="group_creat_success")
+				{
+					alert("group creat successful");
 				}
 				else{
 					console.log(msg);
@@ -322,12 +334,16 @@ export default {
 	justify-content:center
 	align-items:center
 	position: absolute
-	flex-direction:row
+	flex-direction:column
 	height:100%
 	width:100%
 	margin-left:-8px
 	margin-top:-8px
-	
+	.two_button
+		width:150px
+		display:flex
+		flex-direction:row
+		justify-content:space-around
 
 .background-wrapper
 	display:flex
