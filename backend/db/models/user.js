@@ -15,7 +15,16 @@ exports.verify=function(login_message,callback){
 
 exports.findbyuser=function(user_message,callback){
 	console.log(user_message);
-	User.find({"user":user_message.user},function(err,user){
+	User.find({"username":user_message.user},function(err,user){
+    	console.log(user);
+ 		callback(err,user);
+    });
+};
+
+exports.findbymember_id=function(user_message,callback){
+	console.log("test add2");
+	console.log(user_message);
+	User.find({"username":user_message.member_id},function(err,user){
     	console.log(user);
  		callback(err,user);
     });
@@ -23,7 +32,7 @@ exports.findbyuser=function(user_message,callback){
 
 exports.addcontact=function(user_message,callback){		
 	console.log(user_message);
-	User.update({"user":user_message.user},{$push:{contact_id:user_message.contact_id}},function(err,user){
+	User.update({"user":user_message.user},{$addToSet:{contact_id:user_message.contact_id}},function(err,user){
 
 		console.log(user);
 		callback(err,user);
@@ -34,7 +43,7 @@ exports.add_group_id_to_user=function(group_message,callback)
 {
 	console.log("a test");
 	console.log(group_message);
-	User.update({"username":group_message.member_id},{$push:{group_id:group_message.group_id}},function(err,user){
+	User.update({"username":group_message.member_id},{$addToSet:{group_id:group_message.group_id}},function(err,user){
 		console.log(user);
 		callback(err,user);
     });
