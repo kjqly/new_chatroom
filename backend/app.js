@@ -243,16 +243,17 @@ wss.on('connection', function(ws) {
 		else if(message.action=="add_member")
 		{
 			//查找加入群组的成员是否存在
-			User.findbymember_id(
+			User.findbyuser(
 				message.data,
 				function(err,user)
 				{
 					if(err){
 						console.log(err);
 					}
-					//如果用户不存在
+					
 					else{
 						console.log("test add");
+						//如果用户不存在
 						if(user[0]==null)
 						{
 							
@@ -273,21 +274,30 @@ wss.on('connection', function(ws) {
 									else{
 										console.log(groupchat);
 										
-										//若群组不存在，则新建群组
+										//若群组不存在，则新建一个用户信息只有自己的群组
 										if(groupchat[0] == null){
-											Groupchat.create({
-												chatroomname:message.data.group_id,
-												//member_id:message.data.member_id
-											},function(err,groupchat){
+											Groupchat.create(
+											message.data,
+											function(err,groupchat){
 												if(err){
 													console.log(err);
 												}
 												else{
-													let result_temp={message:"group_creat_success"};
+													let result_temp={message:"group_creat_success",group_id:message.data.group_id};
 													let result = JSON.stringify(result_temp);
 													ws.send(result);
+													//将群组名添加到用户的群组信息中
+													User.add_group_id_to_user(
+													message.data,
+													function(err,result){
+														if(err) {
+															console.log(err);
+														}
+														else {
+															console.log(result);
+														}
+													});
 													//向新建的群组中加入成员信息
-													console.log("b test");
 													console.log(groupchat);
 													Groupchat.add_member_id(message,function(err,group){
 														if(err) {
@@ -296,7 +306,7 @@ wss.on('connection', function(ws) {
 														else {
 															console.log(group);
 															//向用户信息中加入群的信息
-															User.add_group_id_to_user(
+															User.add_group_id_to_member(
 																message.data,
 																function(err,user){
 																	if(err) {
@@ -316,37 +326,59 @@ wss.on('connection', function(ws) {
 										
 										//若群组已经存在，直接添加成员信息
 										else{
-											Groupchat.add_member_id(message,function(err,result){
+											User.findbycreateuser(
+											message.data,
+											function(err,user)
+											{
 												if(err) {
 													console.log(err);
 												}
 												else {
-													console.log(result);
-													User.add_group_id_to_user(
-														message.data,
-														function(err,user){
+													console.log("aaaaaaaa");
+													console.log(user);
+													let position = user[0].group_id.indexOf(message.data.group_id);
+													console.log(position)
+													if(position!=-1)
+													{
+														Groupchat.add_member_id(message,function(err,result){
 															if(err) {
 																console.log(err);
 															}
 															else {
-																console.log(user);
-															}	
+																console.log(result);
+																User.add_group_id_to_member(
+																	message.data,
+																	function(err,user){
+																		if(err) {
+																			console.log(err);
+																		}
+																		else {
+																			console.log(user);
+																		}	
+																	});
+																//如果用户已经存在群中
+																if(result.nModified==0)
+																{
+																	let result_temp={message:"member_exist"};
+																	let result = JSON.stringify(result_temp);
+																	ws.send(result);
+																}
+																else
+																{
+																	let result_temp={message:"member_add_success"};
+																	let result = JSON.stringify(result_temp);
+																	ws.send(result);
+																}
+															}
 														});
-													if(result.nModified==0)
-													{
-														let result_temp={message:"member_exist"};
-														let result = JSON.stringify(result_temp);
-														ws.send(result);
 													}
-													else
-													{
-														let result_temp={message:"member_add_success"};
+													else{
+														let result_temp={message:"permission_denied"};
 														let result = JSON.stringify(result_temp);
 														ws.send(result);
 													}
 												}
 											});
-											
 										/*	Groupchat.update({chatroomname:message.data.group_id},
 											{$addToSet:{member_id:data.member_id}});
 											console.log("have");*/
