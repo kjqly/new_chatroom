@@ -213,7 +213,7 @@ export default {
 			var member_id_tmp = document.getElementById("member_id");
 			var member_id=member_id_tmp.value;
 			
-			var temp = {action:"add_member",data:{group_id:group_id,member_id:member_id}};
+			var temp = {action:"add_member",data:{group_id:group_id,user:member_id,create_user:this.user}};
 			temp = JSON.stringify(temp);
 			this.ws_server.send(temp);
 		},
@@ -293,6 +293,11 @@ export default {
 				else if(msg.message=="group_creat_success")
 				{
 					alert("group creat successful");
+					self.groupList.push(msg.group_id);
+				}	
+				else if(msg.message=="permission_denied")
+				{
+					alert("permission denied");
 				}
 				else{
 					console.log(msg);

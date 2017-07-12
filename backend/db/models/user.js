@@ -13,6 +13,15 @@ exports.verify=function(login_message,callback){
     });
 };
 
+exports.findbycreateuser=function(user_message,callback){
+	console.log(user_message);
+	User.find({"username":user_message.create_user},function(err,user){
+    	console.log(user);
+ 		callback(err,user);
+    });
+};
+
+
 exports.findbyuser=function(user_message,callback){
 	console.log(user_message);
 	User.find({"username":user_message.user},function(err,user){
@@ -21,14 +30,6 @@ exports.findbyuser=function(user_message,callback){
     });
 };
 
-exports.findbymember_id=function(user_message,callback){
-	console.log("test add2");
-	console.log(user_message);
-	User.find({"username":user_message.member_id},function(err,user){
-    	console.log(user);
- 		callback(err,user);
-    });
-};
 
 exports.addcontact=function(user_message,callback){		
 	console.log(user_message);
@@ -39,11 +40,20 @@ exports.addcontact=function(user_message,callback){
     });
 }
 
-exports.add_group_id_to_user=function(group_message,callback)
+exports.add_group_id_to_member=function(group_message,callback)
 {
 	console.log("a test");
 	console.log(group_message);
-	User.update({"username":group_message.member_id},{$addToSet:{group_id:group_message.group_id}},function(err,user){
+	User.update({"username":group_message.user},{$addToSet:{group_id:group_message.group_id}},function(err,user){
+		console.log(user);
+		callback(err,user);
+    });
+}
+
+exports.add_group_id_to_user=function(group_message,callback)
+{
+	console.log(group_message);
+	User.update({"username":group_message.create_user},{$addToSet:{group_id:group_message.group_id}},function(err,user){
 		console.log(user);
 		callback(err,user);
     });
