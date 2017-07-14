@@ -190,6 +190,7 @@ wss.on('connection', function(ws) {
 		else if(message.action=="add_contact")
 		{
 			console.log(message);
+			//查找要添加的联系人是已注册用户
 			User.findbycontact_id(
 				message.data,
 				function(err,user)
@@ -198,40 +199,70 @@ wss.on('connection', function(ws) {
 						console.log(err);
 					}
 					else{
+						console.log("test1");
 						console.log(user);
+						//如果联系人时已注册用户
 						if(user[0]!=null)
 						{
+							console.log("test2");
+							console.log(user);
 							var exist=false;
+							//查找要添加的联系人的联系人名单，看发起添加好友的用户是否在名单里
 							user[0].contact_id.forEach(function(contact_temp){
-								if(contact_temp==message.data.contact_id){
+								console.log("test3");
+								if(contact_temp==message.data.user){
+									console.log("test4");
 									exist=true;
 									var add_contact_temp={message:"contact_exist"};
 									var add_contact = JSON.stringify(add_contact_temp);
-								
 									ws.send(add_contact);
 								}
 							});
-							
+								
+							//如果不是好友，添加好友
 							if(exist==false)
 							{	
+								console.log("test4");
 								//添加联系人
 								User.addcontact(
-									message.data,
+									message.data.contact_id,
+									message.data.user,
 									function(err,user)
 									{
 										if(err) {
 											console.log(err);
 										}
 										else {
-											
 											console.log(user);
 										}
 									});
-									
-								add_contact_temp={message:"add_contact_success",contact:message.data.contact_id};
-								add_contact = JSON.stringify(add_contact_temp);
-								ws.send(add_contact);
+
+								//添加联系人
+								User.addcontact(
+									message.data.user,
+									message.data.contact_id,
+									function(err,user)
+									{
+										if(err) {
+											console.log(err);
+										}
+										else {
+											console.log(user);
+											add_contact_temp={message:"add_contact_success",contact_id:message.data.contact_id};
+											add_contact = JSON.stringify(add_contact_temp);
+											ws.send(add_contact);
+										}
+									});
+								
 							}
+	
+						}
+						else
+						{
+							//提示用户不存在
+							add_contact_temp={message:"member_add_notexist"};
+							add_contact = JSON.stringify(add_contact_temp);
+							ws.send(add_contact);
 						}
 					}
 				});

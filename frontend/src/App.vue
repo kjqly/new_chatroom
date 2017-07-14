@@ -1,7 +1,13 @@
 <template>
 	
 	<div>
-		<router-view @listen_to_sign_login="send" @listen_to_websocket="send2" v-bind:chatroom_user=something></router-view>
+		<router-view @listen_to_sign_login="send" @listen_to_websocket="send2"
+		v-bind:chatroom_user=something
+		v-bind:contentList2_for_web=[].concat(contentList2)
+		v-bind:contentList1_for_web=[].concat(contentList1)
+		v-bind:groupList_for_web=[].concat(groupList)
+		v-bind:contactList_for_web=[].concat(contactList)>>
+		</router-view>
 	</div>	
 
 </template>
@@ -24,15 +30,14 @@ export default {
   				msg: "1"
   			},{
   				msg:"2"
-  			}],
+  			}],			
 			contentList2: [{
-  				msg: "a"
+  				msg: "1"
   			},{
-  				msg:"b"
+  				msg:"2"
   			}],
-			
-			contactList:[],
 			groupList:[],
+			contactList:[],
 			sender: "",
 			target: "",
 			content: "",
@@ -83,9 +88,12 @@ export default {
 				{
 					alert("login successful");
 					self.mark=false;
-					self.$router.push({path:'/websocket'});
-					self.contactList=[].concat(msg.data.contact_id);
 					self.groupList=[].concat(msg.data.group_id);
+					self.contactList=[].concat(msg.data.contact_id);
+					console.log("test");
+					console.log(msg.data.group_id);
+					self.$router.push({path:'/websocket'});
+
 				}
 				else if(msg.message=="login_denied")
 				{
@@ -98,7 +106,7 @@ export default {
 				else if(msg.message=="add_contact_success")
 				{
 					alert("add contact success!");
-					self.contactList.push({contact:msg.contact});
+					self.contactList.push(msg.contact_id);
 				}
 				else if(msg.message=="contact_exist")
 				{
@@ -115,7 +123,7 @@ export default {
 				}
 				else if(msg.message=="member_add_notexist")
 				{
-					alert("member not exist");
+					alert("user not exist");
 				}
 				else if(msg.message=="group_creat_success")
 				{
@@ -134,9 +142,7 @@ export default {
 					})*/
 				
 					if(msg.type=="all")
-					{	
-					/*	var msg_tmp = JSON.stringify(msg.content)
-						msg_tmp.replace(/"/g, "")*/
+					{		
 						self.contentList2.push({
 							msg:msg.content
 						})
@@ -146,6 +152,7 @@ export default {
 						self.contentList1.push({
 							msg:msg.content
 						})
+						
 					}
 
 				}

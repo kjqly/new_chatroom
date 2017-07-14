@@ -32,17 +32,15 @@ exports.findbyuser=function(user_message,callback){
 
 exports.findbycontact_id=function(user_message,callback){
 	console.log(user_message);
-	User.find({"username":user_message.user},function(err,user){
+	User.find({"username":user_message.contact_id},function(err,user){
     	console.log(user);
  		callback(err,user);
     });
 };
 
 
-exports.addcontact=function(user_message,callback){		
-	console.log(user_message);
-	User.update({"user":user_message.user},{$addToSet:{contact_id:user_message.contact_id}},function(err,user){
-
+exports.addcontact=function(user1,user2,callback){		
+	User.update({"username":user1},{$addToSet:{contact_id:user2}},function(err,user){
 		console.log(user);
 		callback(err,user);
     });

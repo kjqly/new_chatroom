@@ -49,14 +49,14 @@
 			</div>
 			<div class=contact_list>
 				<ul>
-					<li v-for="content in contactList">
+					<li v-for="content in contactList_for_web">
 						{{content}}		
 					</li>
 				</ul>
 			</div>
 			<div class=group_list>
 				<ul>
-					<li v-for="content in groupList">
+					<li v-for="content in groupList_for_web">
 						{{content}}		
 					</li>
 				</ul>
@@ -70,7 +70,7 @@
 			<div class="chat_interface">
 				<div class="single_interface">
 					<ul>
-						<li v-for="content in contentList1">
+						<li v-for="content in contentList1_for_web">
 								{{content.msg}}		
 						</li>
 					</ul>
@@ -78,7 +78,7 @@
 				
 				<div class="group_interface">
 					<ul>
-						<li v-for="content in contentList2">
+						<li v-for="content in contentList2_for_web">
 								{{content.msg}}			
 						</li>
 					</ul>
@@ -99,32 +99,14 @@
 
 <script type="text/esmascript-6">
 export default {
-	props:["chatroom_user"],
+	props:["chatroom_user","contentList2_for_web","contentList1_for_web","contactList_for_web","groupList_for_web"],
 	data() {
 		return {
-			ws_server: '',
-			ws_cube: '',
-			contentList1: [{
-  				msg: "1"
-  			},{
-  				msg:"2"
-  			}],
-			contentList2: [{
-  				msg: "a"
-  			},{
-  				msg:"b"
-  			}],
-			
 			contactList:[],
 			groupList:[],
-			sender: "",
 			target: "",
 			content: "",
 			send_content: "",
-			mark:true,
-			user:"",
-			password:"",
-			groupname:"",
 		}
 	},
 	methods: {
@@ -158,7 +140,7 @@ export default {
 			var member_id_tmp = document.getElementById("member_id");
 			var member_id=member_id_tmp.value;
 			
-			var temp = {action:"add_member",data:{group_id:group_id,user:member_id,create_user:"kang1"}};
+			var temp = {action:"add_member",data:{group_id:group_id,user:member_id,create_user:this.chatroom_user}};
 			temp = JSON.stringify(temp);
 			this.$emit("listen_to_websocket",temp);
 		},
@@ -166,9 +148,8 @@ export default {
 		addcontact(){
 			var contact_id_tmp = document.getElementById("contact_id");
 			var contact_id=contact_id_tmp.value;
-			//console.log(this.content)
 
-			var temp = {action:"add_contact",data:{contact_id:contact_id,user:this.user}};
+			var temp = {action:"add_contact",data:{contact_id:contact_id,user:this.chatroom_user}};
 			temp = JSON.stringify(temp);
 			this.$emit("listen_to_websocket",temp);
 		}
@@ -246,7 +227,7 @@ export default {
 					flex:1
 			.chat_send
 				display:flex
-				ustify-content:center
+				justify-content:flex-end
 				align-items:center
 				background-color:#B9B9FF
 			.chat_input	
