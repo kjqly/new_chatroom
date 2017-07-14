@@ -57,8 +57,6 @@ var ws_save = false;
 var str="";
 
 function connect(message,ws){
-	console.log("test1");
-
 	for(var i =0; i<clients.length;i++){
 		if(clients[i].user == message){
 			ws_save = true;
@@ -192,7 +190,7 @@ wss.on('connection', function(ws) {
 		else if(message.action=="add_contact")
 		{
 			console.log(message);
-			User.findbyuser(
+			User.findbycontact_id(
 				message.data,
 				function(err,user)
 				{

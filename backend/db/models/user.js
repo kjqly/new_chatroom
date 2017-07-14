@@ -30,6 +30,14 @@ exports.findbyuser=function(user_message,callback){
     });
 };
 
+exports.findbycontact_id=function(user_message,callback){
+	console.log(user_message);
+	User.find({"username":user_message.user},function(err,user){
+    	console.log(user);
+ 		callback(err,user);
+    });
+};
+
 
 exports.addcontact=function(user_message,callback){		
 	console.log(user_message);
