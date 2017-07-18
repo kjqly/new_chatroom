@@ -6,7 +6,8 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var Groupchat = require('./db/models/group-chat.js');
-var User=require('./db/models/user.js')
+var User=require('./db/models/user.js');
+var Record=require('./db/models/record.js');
 var index = require('./routes/index');
 var users = require('./routes/users');
 
@@ -436,7 +437,6 @@ wss.on('connection', function(ws) {
 		*/
 			
 		//聊天信息部分
-		
 		else
 		{
 			//如果是群聊信息
@@ -489,6 +489,57 @@ wss.on('connection', function(ws) {
 						}
 					});
 			}
+			
+			else if(message.data.type === "single")
+			{
+				Record.findbysender(
+					message.data,
+					function(err,result)
+					{
+						if(err){
+							console.log(err);
+						}
+						else{
+							if(result[0]==null)
+							{
+								Record.create_record(
+									message.data,
+									function(err,record){
+										if(err){
+											console.log(err);
+										}
+										else{
+											console.log(record);
+										}
+								
+									});
+							}
+							else{
+								Record.addrecord(
+									message.data,
+									function(err,record){
+										if(err){
+											console.log(err);
+										}
+										else{
+											console.log(record);
+										}
+								
+									});
+							}
+								
+						}
+					});
+				
+				clients.forEach(function(ws_temp){
+					var send_content = JSON.stringify(message.data);
+					if(message.data.target == ws_temp.user || message.data.user == ws_temp.user){
+						//使用ws_temp中的ws来获取连接，并进行发送消息
+						ws_temp.ws.send(send_content);
+					}
+				})
+			}
+				
 					
 				//遍历整个连接池，查询是否有符合条件的websocket连接
 			/*	clients.forEach(function(ws_temp){
@@ -505,17 +556,7 @@ wss.on('connection', function(ws) {
 					//}
 				})
 			}*/
-			else {
-				clients.forEach(function(ws_temp){
-					var send_content = JSON.stringify(message.data);
-					console.log(send_content);
 
-					if(message.target == ws_temp.user){
-						//使用ws_temp中的ws来获取连接，并进行发送消息
-						ws_temp.ws.send(send_content);
-					}
-				});
-			}
 		}
 	});
 

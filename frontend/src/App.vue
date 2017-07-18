@@ -1,12 +1,11 @@
 <template>
 	
 	<div>
-		<router-view @listen_to_sign_login="send" @listen_to_websocket="send2"
+		<router-view @listen_to_sign_login="send" @listen_to_websocket="send2" @listen_to_websocket_change="clear"
 		v-bind:chatroom_user=something
-		v-bind:contentList2_for_web=[].concat(contentList2)
-		v-bind:contentList1_for_web=[].concat(contentList1)
-		v-bind:groupList_for_web=[].concat(groupList)
-		v-bind:contactList_for_web=[].concat(contactList)>>
+		v-bind:contentList_for_web=[].concat(contentList)
+		v-bind:groupList_for_web=[].concat(groupList) 
+		v-bind:contactList_for_web=[].concat(contactList)>
 		</router-view>
 	</div>	
 
@@ -26,16 +25,7 @@ export default {
 		return {
 			ws_server: '',
 			ws_cube: '',
-			contentList1: [{
-  				msg: "1"
-  			},{
-  				msg:"2"
-  			}],			
-			contentList2: [{
-  				msg: "1"
-  			},{
-  				msg:"2"
-  			}],
+			contentList:[],			
 			groupList:[],
 			contactList:[],
 			sender: "",
@@ -57,16 +47,29 @@ export default {
 
 		send2(data) {
 			this.ws_server.send(data);
-		}
-	},
+		},
 
+		clear(data){
+			this.contentList.length=0;
+		},
+	},	
 	created() {
 		this.ws_server = new WebSocket('ws://127.0.0.1:8081');
+		this.ws_cube = new WebSocket('ws://172.21.4.47:13888','cube-wsport');
 		let self = this;
 		self.ws_server.onopen = function(e) {
-			alert("connect");
+			alert("connect server");
 		}
 		
+		self.ws_cube.onopen = function(e) {
+			alert("connect cube");
+			let test={"HEAD":{"tag":"MESG","version":65537,"record_type":"MESSAGE","record_subtype":"BASE_MSG","flow":0,"record_num":1,"expand_num":0,"nonce":""},"RECORD":[{"message":"hello,world!"}],"EXPAND":[]}
+			test = JSON.stringify(test);
+			self.ws_cube.send(test);
+		}
+		self.ws_cube.onmessage = function(e) {
+			console.log(e.data);
+		}
 		self.ws_server.onmessage = function(e) {
 			
 			let msg;
@@ -136,25 +139,7 @@ export default {
 				}
 				else{
 					console.log(msg);
-	
-					/*self.contentList2.push({
-						msg:msg
-					})*/
-				
-					if(msg.type=="all")
-					{		
-						self.contentList2.push({
-							msg:msg.content
-						})
-					}
-					else
-					{	
-						self.contentList1.push({
-							msg:msg.content
-						})
-						
-					}
-
+					self.contentList.push({sender:msg.user,content:msg.content});
 				}
 			}
 		}

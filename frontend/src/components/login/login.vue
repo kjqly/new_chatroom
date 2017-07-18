@@ -1,21 +1,27 @@
 <template>
 	<div class="login_interface">
+		<h2>
+			欢迎使用聊天室
+		</h2>
+		<br/>	
+		<br/>
+		<br/>
 		<div>
 			用户名<br/>
-			<input type="text" id="user">
+			<input type="text" class="form-control" id="user">
 		</div>	
 		<br/>	
 		<div>
 			密码<br/>
-			<input type="password" id="password">
+			<input type="password" class="form-control" id="password">
 		</div>
 		<br/>
 		<div class="two_button">
 			<div class="login">
-				<button @click="login">登陆</button>
+				<button class="btn btn-default" @click="login">登陆</button>
 			</div>
 			<div class="signup">
-				<button @click="signup">注册</button>
+				<button class="btn btn-default" @click="signup">注册</button>
 			</div>
 		</div>
 	</div>
@@ -73,8 +79,10 @@ export default {
 </script>
 
 <style lang="stylus" rel="stylesheet/stylus">
+
 .login_interface
-	background-color:#3D7878
+	background:url(login2.png) no-repeat
+	background-size:cover
 	color:#FFFFFF
 	display:flex
 	justify-content:center
@@ -83,8 +91,6 @@ export default {
 	flex-direction:column
 	height:100%
 	width:100%
-	margin-left:-8px
-	margin-top:-8px
 	.two_button
 		width:150px
 		display:flex
