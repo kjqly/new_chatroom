@@ -3,7 +3,7 @@
 	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
 		<div class="container">
 			<div class="navbar-header">
-				<a class="navbar-brand" style="padding:4px" href="#"><img src="../../img/bjutblack.png"></a>
+				<a class="navbar-brand" href="#">聊天室</a>
 				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
@@ -63,7 +63,7 @@
 				<ul class="nav nav-pills nav-stacked">
 					<li class="list-group-item active">好友列表</li>
 					<li class="list-group-item" v-for="(content,index) in contactList_for_web">
-						<a href="#websocket" @click="changecontact(index)">{{content}}</a>	
+						<a href="#websocket" @click="changecontact(content,index)">{{content}}<span v-if="message_prompt_for_web_single[index]" class="badge">未读信息</span></a>	
 					</li>
 				</ul>
 			</div>
@@ -72,7 +72,7 @@
 				<ul class="nav nav-pills nav-stacked">
 					<li class="list-group-item active">群组列表</li>
 					<li class="list-group-item" v-for="(content,index) in groupList_for_web">
-						<a href="#websocket" @click="changegroup(index)">{{content}}</a>	
+						<a href="#websocket" @click="changegroup(content,index)">{{content}}<span v-if="message_prompt_for_web[index]" class="badge">未读信息</span></a>
 					</li>
 				</ul>
 			</div>
@@ -82,10 +82,16 @@
 				{{contactnow}}
 			</div>
 			
-			<div style="overflow:scroll; width:100%; height:400px" class="chat_interface">
+			<div style="overflow:auto; width:100%; height:400px" class="chat_interface">
 				<ul style="width:100%;padding-left:100px;padding-right:100px;padding-top:20px;">
 					<li style="list-style-type: none" v-for="content in contentList_for_web">
-						<div style="width:900px;word-wrap:break-word" :class="{'right_msg':content.sender == chatroom_user}" class="chat_msg">{{content.sender}}: <br/>{{content.content}}</div>
+						<div style="width:900px;word-wrap:break-word" :class="{'right_msg':content.sender == chatroom_user}" class="chat_msg">
+							<div style="width:300px;background-color:#DDDDFF"> 
+								{{content.sender}}: <br/>{{content.content}}
+							</div>
+							<br/>	
+						</div>
+						<br/>
 					</li>
 				</ul>
 			</div>
@@ -104,7 +110,7 @@
 
 <script type="text/esmascript-6">
 export default {
-	props:["chatroom_user","contentList_for_web","contactList_for_web","groupList_for_web"],
+	props:["chatroom_user","contentList_for_web","contactList_for_web","groupList_for_web","message_prompt_for_web","message_prompt_for_web_single"],
 	data() {
 		return {
 			contactList:[],
@@ -116,22 +122,23 @@ export default {
 			timestamp:""
 		}
 	},
-	
+
 	methods: {
-		changecontact(index)
+
+		changecontact(content,index)
 		{
-			this.target={type:"single",target:this.contactList_for_web[index]};
+			this.target={type:"single",sender:this.chatroom_user,target:this.contactList_for_web[index],position:index};
 			this.contactnow=this.contactList_for_web[index];
 			this.contentList_for_web.length=0;
-			this.$emit("listen_to_websocket_change",this.contentList_for_web.length);
+			this.$emit("listen_to_websocket_change",this.target);
 		},
 		
-		changegroup(index)
+		changegroup(content,index)
 		{
-			this.target={type:"all",target:this.groupList_for_web[index]};
+			this.target={type:"all",sender:this.chatroom_user,target:this.groupList_for_web[index],position:index};
 			this.contactnow=this.groupList_for_web[index];
 			this.contentList_for_web.length=0;
-			this.$emit("listen_to_websocket_change",this.contentList_for_web.length);
+			this.$emit("listen_to_websocket_change",this.target);
 		},
 		
 		send() {
@@ -220,20 +227,23 @@ export default {
 				display:flex
 				align-items:center
 				justify-content:center
-				font-size:20px
+				font-size:18px
 			
 			.chat_interface
-				background-color:#F0F0F0		
+				background-color:#F0F0F0	
 				display:flex
-				flex:1
+				height:700px
 				flex-direction:row
-				font-size:20px 
+				font-size:18px 
 	
 				.chat_msg
 					text-align:left
+					display:flex
+					justify-content:flex-start
 					&.right_msg
 						text-align:right
-						color:#ADADAD
+						display:flex
+						justify-content:flex-end
 				
 			.chat_send
 				display:flex		
@@ -243,8 +253,10 @@ export default {
 				
 			.chat_input	
 				width:100%
+				height:100px
 				display:flex
 				flex:1
+				
 				#input
 					display:flex
 					flex:1

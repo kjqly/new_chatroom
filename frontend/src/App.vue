@@ -1,14 +1,14 @@
-<template>
-	
+<template>	
 	<div>
 		<router-view @listen_to_sign_login="send" @listen_to_websocket="send2" @listen_to_websocket_change="clear"
 		v-bind:chatroom_user=something
 		v-bind:contentList_for_web=[].concat(contentList)
 		v-bind:groupList_for_web=[].concat(groupList) 
-		v-bind:contactList_for_web=[].concat(contactList)>
+		v-bind:contactList_for_web=[].concat(contactList)
+		v-bind:message_prompt_for_web=[].concat(message_prompt2)
+		v-bind:message_prompt_for_web_single=[].concat(message_prompt_single)>
 		</router-view>
 	</div>	
-
 </template>
 
 <script type="text/esmascript-6">
@@ -35,7 +35,11 @@ export default {
 			mark:true,
 			password:"",
 			groupname:"",
-			something:""
+			something:"",
+			message_prompt:[],
+			message_prompt2:[],
+			message_prompt_single_tmp:[],
+			message_prompt_single:[]
 		}
 	},
 	methods: {
@@ -50,7 +54,16 @@ export default {
 		},
 
 		clear(data){
+			this.target=data.target;
 			this.contentList.length=0;
+			if(data.type=="all")
+				this.message_prompt2[data.position]=false;
+			else
+				this.message_prompt_single[data.position]=false;
+			data={action:"record",data:{type:data.type,sender:data.sender,target:data.target}};
+			
+			data = JSON.stringify(data);
+			this.ws_server.send(data);
 		},
 	},	
 	created() {
@@ -98,7 +111,7 @@ export default {
 					self.$router.push({path:'/websocket'});
 
 				}
-				else if(msg.message=="login_denied")
+				else if(msg.message=="login_d=[].concat(enied")
 				{
 					alert("login failed");
 				}
@@ -137,9 +150,44 @@ export default {
 				{
 					alert("permission denied");
 				}
+				else if(msg.message=="record")
+				{
+					self.contentList=[].concat(msg.record);
+				}
 				else{
 					console.log(msg);
-					self.contentList.push({sender:msg.user,content:msg.content});
+					if(msg.type=="all")
+					{
+						if(self.target==msg.target){
+							self.contentList.push({sender:msg.user,content:msg.content});
+						}
+						else
+						{
+							for(var i=0;i<self.groupList.length;i++)
+							{	
+								if(self.groupList[i]==msg.target)
+									self.message_prompt[i]=true;
+							}
+							self.message_prompt2=[].concat(self.message_prompt);
+
+						}
+					}
+					else{
+						if(self.target==msg.target || self.target==msg.user){
+							self.contentList.push({sender:msg.user,content:msg.content});
+						}
+						else{
+							alert("..");
+							for(var i=0;i<self.contactList.length;i++)
+							{	
+								if(self.contactList[i]==msg.user)
+									self.message_prompt_single_tmp[i]=true;
+							}
+							self.message_prompt_single=[].concat(self.message_prompt_single_tmp);
+						}
+					}
+						
+						
 				}
 			}
 		}

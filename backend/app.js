@@ -7,7 +7,8 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var Groupchat = require('./db/models/group-chat.js');
 var User=require('./db/models/user.js');
-var Record=require('./db/models/record.js');
+var Group_record=require('./db/models/group_record.js');
+var Single_record=require('./db/models/single_record.js');
 var index = require('./routes/index');
 var users = require('./routes/users');
 
@@ -186,6 +187,54 @@ wss.on('connection', function(ws) {
 				}
 			});
 		}*/
+		
+		//选择群组调出聊天记录
+		else if(message.action=="record" && message.data.type=="all")
+		{
+			Group_record.findbychatroom_name(
+				message.data.target,
+				function(err,result){
+					if(err){
+						console.log(err);
+					}
+					else{
+						if(result[0]!=null)
+						{
+							console.log(result);
+							send={message:"record",record:result[0].record};
+							console.log(send);
+							send = JSON.stringify(send);
+							ws.send(send);
+						}
+					}
+				});
+		}
+		else if(message.action=="record" && message.data.type=="single")
+		{
+			Single_record.findrecord(
+				message.data,
+				function(err,result){
+					if(err){
+						console.log(err);
+					}
+					else{
+						console.log(result);
+						if(result[0]!=null)
+						{
+							console.log("record test1");
+							console.log(result);
+							send={message:"record",record:result[0].record};
+							console.log(send);
+							send = JSON.stringify(send);
+							ws.send(send);
+						}
+						else{
+							console.log("record test2");
+						}
+					}
+				});
+		}
+		
 		
 		//添加联系人
 		else if(message.action=="add_contact")
@@ -453,38 +502,63 @@ wss.on('connection', function(ws) {
 							var exist=false;
 							if(groupchat[0]!=null)
 							{
-							//判断发消息的用户是否在群里
-								groupchat[0].member_id.forEach(function(user_temp){
-									if(message.data.user==user_temp)
-										exist=true
-								});
-								//不在群里则返回提示信息
-								if(exist==false)
-								{
-									var temp={message:"need_join"}
-									var join_temp=JSON.stringify(temp);
-									ws.send(join_temp);
-								}
-								
-								else
-								{
-									console.log(groupchat);
-									//遍历整个连接池，查询是否有符合条件的websocket连接
-									clients.forEach(function(ws_temp){
-										var send_content = JSON.stringify(message.data);
-										console.log(send_content);
-										
-										//遍历数据库中群组的成员信息
-										for(var i=0;i<groupchat[0].member_id.length;i++)
-										{
-											console.log(groupchat[0].member_id[i]);
-											if(groupchat[0].member_id[i] == ws_temp.user){
-												//使用ws_temp中的ws来获取连接，并进行发送消息
-												ws_temp.ws.send(send_content);
-											}
+								console.log(groupchat);
+								//遍历整个连接池，查询是否有符合条件的websocket连接
+								clients.forEach(function(ws_temp){
+									var send_content = JSON.stringify(message.data);
+									console.log(send_content);
+									
+									//遍历数据库中群组的成员信息
+									for(var i=0;i<groupchat[0].member_id.length;i++)
+									{
+										console.log(groupchat[0].member_id[i]);
+										if(groupchat[0].member_id[i] == ws_temp.user){
+											//使用ws_temp中的ws来获取连接，并进行发送消息
+											ws_temp.ws.send(send_content);
 										}
-									})
-								}
+									}	
+								})
+								
+								Group_record.findbychatroom_name(
+										message.data.target,
+										function(err,record){
+											if(err){
+												console.log(err);
+											}
+											else{
+												console.log(record);
+												//如果没有消息记录，则新建一条记录
+												if(record[0]==null){
+													Group_record.create_record(
+														message.data,
+														function(err,record){
+															if(err){
+																console.log(err);
+															}
+															else{
+																console.log(record);
+															}
+														});
+												}
+												
+												else
+												{
+													//在数据库中添加消息记录
+													Group_record.add_record(
+														message.data,
+														function(err,result){
+															if(err){
+																console.log(err);
+															}
+															else{
+																console.log(result);
+															}
+														});
+												}
+														
+											}
+										});
+								
 							}
 						}
 					});
@@ -492,52 +566,56 @@ wss.on('connection', function(ws) {
 			
 			else if(message.data.type === "single")
 			{
-				Record.findbysender(
-					message.data,
-					function(err,result)
-					{
-						if(err){
-							console.log(err);
-						}
-						else{
-							if(result[0]==null)
-							{
-								Record.create_record(
-									message.data,
-									function(err,record){
-										if(err){
-											console.log(err);
-										}
-										else{
-											console.log(record);
-										}
-								
-									});
-							}
-							else{
-								Record.addrecord(
-									message.data,
-									function(err,record){
-										if(err){
-											console.log(err);
-										}
-										else{
-											console.log(record);
-										}
-								
-									});
-							}
-								
-						}
-					});
-				
+				console.log("this is a testhh");
+				console.log(message);
 				clients.forEach(function(ws_temp){
 					var send_content = JSON.stringify(message.data);
 					if(message.data.target == ws_temp.user || message.data.user == ws_temp.user){
 						//使用ws_temp中的ws来获取连接，并进行发送消息
 						ws_temp.ws.send(send_content);
 					}
-				})
+				});
+				Single_record.findbyuser(
+					message.data,
+					function(err,result)
+					{	
+						if(err){
+							console.log(err);
+						}
+						else{
+							console.log(result);					
+							if(result[0]==null)
+							{
+								console.log("this is a test3");
+								Single_record.create_record(
+									message.data,
+									function(err,result){
+										if(err){
+											console.log(err);
+										}
+										else{
+											console.log(result);
+										}
+									});
+							}
+							else{
+								console.log("this is a test2");
+								Single_record.addrecord(
+									message.data,
+									function(err,record){
+										if(err){
+											console.log(err);
+										}
+										else{
+											console.log(record);
+										}
+								
+									});
+							}
+						}			
+						
+					});
+
 			}
 				
 					
