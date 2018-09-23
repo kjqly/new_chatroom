@@ -1,4 +1,4 @@
-var express = require('express');
+﻿var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
@@ -12,7 +12,28 @@ var Single_record=require('./db/models/single_record.js');
 var index = require('./routes/index');
 var users = require('./routes/users');
 
+var tests = require('./routes/tests');
+
 var app = express();
+
+//跨域访问设置
+app.all('*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With,X_Requested_With");
+  res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+  res.header("X-Powered-By", ' 3.2.1')
+  res.header("Content-Type", "application/json;charset=utf-8");
+  res.header("Access-Control-Allow-Credentials","true");//跨域session
+  if(req.method=="OPTIONS") {
+    console.log("OPTIONS");
+    // res.header("Access-Control-Allow-Origin", "*");
+    // res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+    res.sendStatus(200);/*让options请求快速返回*/
+    // res.end();
+  }
+  else
+    next();
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -28,6 +49,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
 app.use('/users', users);
+app.use('/tests',tests);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -95,7 +117,9 @@ wss.on('connection', function(ws) {
 		
 		console.log("ws.on message");
 		console.log(message);
+		console.log("===============");
 		message = JSON.parse(message);
+		console.log(message.action);
 		//当监听消息为注册消息时
 		if(message.action=="sign_up" && message.data.user!="" && message.data.password!="")
 		{
@@ -218,6 +242,7 @@ wss.on('connection', function(ws) {
 						console.log(err);
 					}
 					else{
+						console.log("this is message.action==record 's content");
 						console.log(result);
 						if(result[0]!=null)
 						{

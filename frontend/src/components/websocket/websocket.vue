@@ -101,6 +101,11 @@
 			</div>
 			
 			<div class="chat_send">
+				<select id="select">
+				  <option value="CRYPT">加密</option>
+				  <option value="SIGN">签名</option>
+				  <option value="NOEMAL">不加密</option>
+				</select>
 				<button class="btn btn-primary btn-sm btn-block" @click="send" id="send_button">发送</button>
 			</div>
 		</div>		
@@ -145,11 +150,34 @@ export default {
 			this.timestamp = (new Date()).valueOf();
 			let send_content = document.getElementById("input");
 			this.content = send_content.value;
-
-			this.send_content = {action:"message",data:{type:this.target.type,user:this.chatroom_user,target:this.target.target,content:this.content,time:this.timestamp}};
+			var options = document.getElementById("select");
+			alert(options.value);
+			this.send_content = { 
+									"HEAD":
+									{"tag":"MESG","version":65537, "record_type":"TRUSTCHAT_DEMO","record_subtype":"WEB_MSG","record_num":1, "expand_num":1, },
+									"action":"message",
+									"data":
+									{
+									"flag":options.value, 
+									"type":this.target.type,
+									"user":this.chatroom_user,
+									"target":this.target.target,
+									"content":this.content,
+									"time":this.timestamp
+									},
+									"EXPAND" :[
+									{
+									"type":"TRUSTCHAT_EXPAND",
+									"subtype":"EXPAND_INFO",
+									"expand":{
+									"sender":this.chatroom_user,
+									"receiver":this.target.target,
+									"flags":options.value}
+									}
+									]
+								}
+		//	this.send_content = {action:"message",data:{flag:options.value, type:this.target.type,user:this.chatroom_user,target:this.target.target,content:this.content,time:this.timestamp}};
 			this.send_content = JSON.stringify(this.send_content);
-
-			console.log(this.send_content);
 
 			this.$emit("listen_to_websocket",this.send_content);
 		},

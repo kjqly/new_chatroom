@@ -68,9 +68,7 @@ export default {
 			console.log(temp);
 			
 			this.send_content = {action:"login",data:{user:this.user,password:this.password}};
-			
-
-			console.log(this.send_content);
+			//this.send_content = { "HEAD":{"tag":"MESG","version":65537,"record_type":"TRUSTCHAT_DEMO","record_subtype":"LOGIN_INFO","record_num":1},"RECORD":[{"user":this.user,"passwd":this.password,}],"EXPAND" :[]}
 
 			this.$emit("listen_to_sign_login",this.send_content);
 		},	
