@@ -61,6 +61,10 @@ export default {
 			console.log("这里进入发送步骤，目前全部转发给server")
 			console.log(data);
 			this.ws_server.send(data);
+
+			//将发送给server的内容转发一份给cube
+			this.ws_cube.send(data);
+			
 			//直接发送到服务端的消息
 			// if(JSON.parse(data).action == "add_contact"){
 			// 	console.log("发送到server");
