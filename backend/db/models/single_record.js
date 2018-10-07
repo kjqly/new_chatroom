@@ -89,10 +89,10 @@ exports.addrecord=function(message,callback)
 		console.log(value[0]);
 		console.log(value[1]);
 		if(value[0] != ""){
-		  console.log("查询活动信息成功");
+		  console.log("查询信息1成功");
 		}
 		if(value[1] != "") {
-		  console.log("查询轮播图信息成功");
+		  console.log("查询信息2成功");
 		}
 		callback(err,value);
 	});
